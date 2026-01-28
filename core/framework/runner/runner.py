@@ -2,6 +2,7 @@
 
 import json
 import os
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Any
@@ -20,6 +21,8 @@ from framework.runtime.execution_stream import EntryPointSpec
 
 if TYPE_CHECKING:
     from framework.runner.protocol import CapabilityResponse, AgentMessage
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -379,9 +382,9 @@ class AgentRunner:
                 try:
                     self._tool_registry.register_mcp_server(server_config)
                 except Exception as e:
-                    print(f"Warning: Failed to register MCP server '{server_config.get('name', 'unknown')}': {e}")
+                    logger.warning("Failed to register MCP server '%s': %s", server_config.get("name", "unknown"), e,)
         except Exception as e:
-            print(f"Warning: Failed to load MCP servers config from {config_path}: {e}")
+            logger.warning("Failed to load MCP servers config from %s: %s", config_path, e,)
 
     def set_approval_callback(self, callback: Callable) -> None:
         """
@@ -418,8 +421,8 @@ class AgentRunner:
                 from framework.llm.litellm import LiteLLMProvider
                 self._llm = LiteLLMProvider(model=self.model)
             elif api_key_env:
-                print(f"Warning: {api_key_env} not set. LLM calls will fail.")
-                print(f"Set it with: export {api_key_env}=your-api-key")
+                logger.warning("%s not set. LLM calls will fail.", api_key_env,)
+                logger.warning("Set it with: export %s=your-api-key", api_key_env,)
 
         # Get tools for executor/runtime
         tools = list(self._tool_registry.get_tools().values())
